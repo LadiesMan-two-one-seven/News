@@ -26,5 +26,4 @@ data class ArticleDbModel(
     val publishedAd: Long,
     val url: String,
     val topic: String
-) {
-}
+)
