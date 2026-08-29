@@ -1,5 +1,9 @@
 package com.asanagaev.news.data.repository
 
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.asanagaev.news.data.dackground.RefreshDataWorker
 import com.asanagaev.news.data.local.ArticleDbModel
 import com.asanagaev.news.data.local.NewsDao
 import com.asanagaev.news.data.local.SubscriptionDbModel
@@ -15,10 +19,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class NewsRepositoryImpl @Inject constructor(
     private val newsDao: NewsDao,
-    private val newsApiService: NewsApiService
+    private val newsApiService: NewsApiService,
+    private val workManager: WorkManager
 ) : NewsRepository {
     override fun getAllSubscriptions(): Flow<List<String>> {
         return newsDao.getAllSubscriptions().map { subscriptions ->
@@ -78,5 +84,16 @@ class NewsRepositoryImpl @Inject constructor(
 
     override suspend fun clearAllArticles(topics: List<String>) {
         newsDao.deleteArticlesByTopics(topics)
+    }
+
+    private fun startBackgroundRefresh() {
+        val request = PeriodicWorkRequestBuilder<RefreshDataWorker>(
+            15L, TimeUnit.MINUTES
+        ).build()
+        workManager.enqueueUniquePeriodicWork(
+            uniqueWorkName = "Refresh data",
+            existingPeriodicWorkPolicy = ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+            request = request
+        )
     }
 }
