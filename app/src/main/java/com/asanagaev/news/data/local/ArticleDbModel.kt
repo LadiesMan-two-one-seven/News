@@ -23,7 +23,7 @@ data class ArticleDbModel(
     val description: String,
     val imageUrl: String?,
     val sourceName: String,
-    val publishedAd: Long,
+    val publishedAt: Long,
     val url: String,
     val topic: String
 )
