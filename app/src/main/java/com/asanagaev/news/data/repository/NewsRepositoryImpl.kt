@@ -1,6 +1,8 @@
 package com.asanagaev.news.data.repository
 
+import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.asanagaev.news.data.dackground.RefreshDataWorker
@@ -11,6 +13,7 @@ import com.asanagaev.news.data.mapper.toDbModels
 import com.asanagaev.news.data.mapper.toEntities
 import com.asanagaev.news.data.remote.NewsApiService
 import com.asanagaev.news.domain.entity.Article
+import com.asanagaev.news.domain.entity.RefreshConfig
 import com.asanagaev.news.domain.repository.NewsRepository
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -24,12 +27,9 @@ import java.util.concurrent.TimeUnit
 class NewsRepositoryImpl @Inject constructor(
     private val newsDao: NewsDao,
     private val newsApiService: NewsApiService,
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
 ) : NewsRepository {
 
-    init {
-        startBackgroundRefresh()
-    }
     override fun getAllSubscriptions(): Flow<List<String>> {
         return newsDao.getAllSubscriptions().map { subscriptions ->
             subscriptions.map { it.topic }
@@ -90,10 +90,23 @@ class NewsRepositoryImpl @Inject constructor(
         newsDao.deleteArticlesByTopics(topics)
     }
 
-    private fun startBackgroundRefresh() {
+    override fun startBackgroundRefresh(refreshConfig: RefreshConfig) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(
+                if (refreshConfig.wifiOnly) {
+                    NetworkType.UNMETERED
+                } else {
+                    NetworkType.CONNECTED
+                }
+            )
+            .setRequiresBatteryNotLow(true)
+            .build()
+
         val request = PeriodicWorkRequestBuilder<RefreshDataWorker>(
-            15L, TimeUnit.MINUTES
-        ).build()
+            refreshConfig.interval.minutes.toLong(), TimeUnit.MINUTES
+        )
+            .setConstraints(constraints)
+            .build()
         workManager.enqueueUniquePeriodicWork(
             uniqueWorkName = "Refresh data",
             existingPeriodicWorkPolicy = ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,

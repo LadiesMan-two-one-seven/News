@@ -1,9 +1,12 @@
 package com.asanagaev.news.domain.repository
 
 import com.asanagaev.news.domain.entity.Article
+import com.asanagaev.news.domain.entity.RefreshConfig
 import kotlinx.coroutines.flow.Flow
 
 interface NewsRepository {
+
+    fun startBackgroundRefresh(refreshConfig: RefreshConfig)
 
     fun getAllSubscriptions(): Flow<List<String>>
 
