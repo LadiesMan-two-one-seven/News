@@ -1,6 +1,5 @@
 package com.asanagaev.news.data.repository
 
-import android.util.Log
 import com.asanagaev.news.data.local.ArticleDbModel
 import com.asanagaev.news.data.local.NewsDao
 import com.asanagaev.news.data.local.SubscriptionDbModel
@@ -44,7 +43,6 @@ class NewsRepositoryImpl @Inject constructor(
             if (e is CancellationException) {
                 throw e
             }
-            Log.e("NewsRepository", e.stackTraceToString())
             listOf()
         }
     }
