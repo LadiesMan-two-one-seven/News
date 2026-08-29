@@ -39,6 +39,7 @@ class NewsRepositoryImpl @Inject constructor(
     private suspend fun loadArticles(topic: String): List<ArticleDbModel> {
         return try {
             newsApiService.loadArticles(topic).toDbModels(topic)
+                .filter { isEnglish(it.title) }
         } catch (e: Exception) {
             if (e is CancellationException) {
                 throw e
@@ -46,6 +47,14 @@ class NewsRepositoryImpl @Inject constructor(
             Log.e("NewsRepository", e.stackTraceToString())
             listOf()
         }
+    }
+
+    private fun isEnglish(text: String?): Boolean {
+        if (text.isNullOrBlank()) return false
+        val letters = text.filter { it.isLetter() }
+        if (letters.isEmpty()) return false
+        val latinLetters = letters.count { it in 'a'..'z' || it in 'A'..'Z' }
+        return latinLetters.toFloat() / letters.length >= 0.7f
     }
 
     override suspend fun removeSubscription(topic: String) {
