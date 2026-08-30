@@ -54,10 +54,10 @@ class SettingsViewModel @Inject constructor(
                 is SettingsCommand.SelectLanguage -> {
                     updateLanguageUseCase(command.language)
                 }
-                is SettingsCommand.SelectNotificationsEnabled -> {
+                is SettingsCommand.SetNotificationsEnabled -> {
                     updateNotificationsEnabledUseCase(command.enabled)
                 }
-                is SettingsCommand.SelectWifiOnly -> {
+                is SettingsCommand.SetWifiOnly -> {
                     updateWifiOnlyUseCase(command.wifiOnly)
                 }
             }
@@ -71,9 +71,9 @@ sealed interface SettingsCommand {
 
     data class SelectInterval(val interval: Interval) : SettingsCommand
 
-    data class SelectNotificationsEnabled(val enabled: Boolean) : SettingsCommand
+    data class SetNotificationsEnabled(val enabled: Boolean) : SettingsCommand
 
-    data class SelectWifiOnly(val wifiOnly: Boolean) : SettingsCommand
+    data class SetWifiOnly(val wifiOnly: Boolean) : SettingsCommand
 }
 
 sealed interface SettingsState {
